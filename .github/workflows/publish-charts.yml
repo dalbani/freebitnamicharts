@@ -35,8 +35,13 @@ jobs:
             if [ ! -d "${chart_name}" ]; then
               continue
             fi
+            echo yq "\"${chart_name} \" + .dependencies[].name" ${chart_name}/Chart.yaml >> dependency-graph
             yq "\"${chart_name} \" + .dependencies[].name" ${chart_name}/Chart.yaml >> dependency-graph
           done
+          
+          cat dependency-graph
+
+          # TODO install Helm
 
           for chart_name in $(tsort dependency-graph | tac); do
             chart_version=$(yq .version ${chart_version}/Chart.yaml)
