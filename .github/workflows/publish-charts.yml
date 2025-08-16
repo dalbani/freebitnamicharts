@@ -3,6 +3,8 @@ on: # rebuild any PRs and main branch changes
   push:
     branches:
       - main
+env:
+  HELM_VERSION: 3.8.1
 # Remove all permissions by default.
 permissions: {}
 jobs:
@@ -25,6 +27,10 @@ jobs:
             path: gh-pages
             persist-credentials: false
             fetch-depth: 0
+      - name: Install helm
+        run: |
+          HELM_TARBALL="helm-v${HELM_VERSION}-linux-amd64.tar.gz"
+          curl -SsLfO "https://get.helm.sh/${HELM_TARBALL}" && sudo tar xf "$HELM_TARBALL" --strip-components 1 -C /usr/local/bin
       - name: Build new/updated charts
         run: |
           cd main/bitnami/bitnami
@@ -35,12 +41,13 @@ jobs:
             if [ ! -d "${chart_name}" ]; then
               continue
             fi
-            yq "\"${chart_name} \" + .dependencies[].name" ${chart_name}/Chart.yaml >> dependency-graph
+            chart_dependencies=$(yq '.dependencies[].name ' ${chart_name}/Chart.yaml)
+            if [ -n "${chart_dependencies}" ]; then
+              echo "${chart_name} ${chart_dependencies}" >> dependency-graph
+            fi
           done
           
           cat dependency-graph
-
-          # TODO install Helm
 
           for chart_name in $(tsort dependency-graph | tac); do
             chart_version=$(yq .version ${chart_version}/Chart.yaml)
@@ -61,4 +68,6 @@ jobs:
       - name: Commit and push updated files
         uses: actions-js/push@master
         with:
+          message: Update charts
+          directory: gh-pages
           github_token: ${{ secrets.GITHUB_TOKEN }}
