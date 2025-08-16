@@ -36,7 +36,7 @@ jobs:
               continue
             fi
             yq "\"${chart_name} \" + .dependencies[].name" ${chart_name}/Chart.yaml >> dependency-graph
-          end
+          done
 
           for chart_name in $(tsort dependency-graph | tac); do
             chart_version=$(yq .version ${chart_version}/Chart.yaml)
