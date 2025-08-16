@@ -3,10 +3,6 @@ on: # rebuild any PRs and main branch changes
   push:
     branches:
       - main
-    paths:
-      - '.github/workflows'
-      - 'bitnami/**'
-      - '!**.md'
 # Remove all permissions by default.
 permissions: {}
 jobs:
