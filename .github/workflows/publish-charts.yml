@@ -41,7 +41,7 @@ jobs:
             if [ ! -d "${chart_name}" ]; then
               continue
             fi
-            chart_dependencies=$(yq '.dependencies[].name ' ${chart_name}/Chart.yaml)
+            chart_dependencies=$(yq '.dependencies[].name' ${chart_name}/Chart.yaml)
             if [ -n "${chart_dependencies}" ]; then
               echo "${chart_name} ${chart_dependencies}" >> dependency-graph
             fi
