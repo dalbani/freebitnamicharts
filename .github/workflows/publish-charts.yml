@@ -1,0 +1,63 @@
+name: Publish Helm charts
+on: # rebuild any PRs and main branch changes
+  push:
+    branches:
+      - main
+    paths:
+      - 'bitnami/**'
+      - '!**.md'
+# Remove all permissions by default.
+permissions: {}
+jobs:
+  build_charts:
+    if: ${{ github.repository_owner == 'dalbani' }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - name: Check out main branch
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          path: main
+          submodules: 'true'
+      - name: Check out gh-pages branch
+        uses: actions/checkout@v5
+        with:
+            ref: gh-pages
+            path: gh-pages
+            persist-credentials: false
+            fetch-depth: 0
+      - name: Build new/updated charts
+        run: |
+          cd main/bitnami/bitnami
+
+          find . -type f -exec sed -i 's#oci://registry-1.docker.io/bitnamicharts#https://dalbani.github.io/freebitnamicharts#' {} \;
+
+          for chart_name in *; do
+            if [ ! -d "${chart_name}" ]; then
+              continue
+            fi
+            yq "\"${chart_name} \" + .dependencies[].name" ${chart_name}/Chart.yaml >> dependency-graph
+          end
+
+          for chart_name in $(tsort dependency-graph | tac); do
+            chart_version=$(yq .version ${chart_version}/Chart.yaml)
+            if [ ! -f ../../../gh-pages/${chart_name}-${chart_version}.tgz ]; do
+              helm dependency update
+              # cd'ing into directory for charts having a dependency like:
+              #  - name: kube-prometheus-crds
+              #    repository: file://./charts/kube-prometheus-crds
+              #    version: 0.x.x
+              (cd ${chart_name} && helm package -d ../../../../gh-pages .)
+            done
+          done
+      - name: Build chart index
+        run: |
+          cd gh-pages
+
+          helm repo index .
+      - name: Commit and push updated files
+        uses: actions-js/push@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
