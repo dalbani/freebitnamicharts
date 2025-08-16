@@ -37,7 +37,8 @@ jobs:
 
           cd main/bitnami/bitnami
 
-          find . -type f -exec sed -i 's#oci://registry-1.docker.io/bitnamicharts#https://dalbani.github.io/freebitnamicharts#' {} \;
+          find . -type f -exec sed -i 's#oci://registry-1.docker.io/bitnamicharts#oci://ghcr.io/dalbani/freebitnamicharts#' {} \;
+          find . -type f -name Chart.yaml -exec sed -i -E 's#https://github.com/bitnami/charts/tree/main/bitnami/.+#https://github.com/dalbani/freebitnamicharts/#' {} \;
 
           for chart_name in *; do
             if [[ ! -d "${chart_name}" ]]; then
@@ -56,7 +57,7 @@ jobs:
               #  - name: kube-prometheus-crds
               #    repository: file://./charts/kube-prometheus-crds
               #    version: 0.x.x
-              (cd ${chart_name} && helm dependency update && helm package -d ../../../../gh-pages .)
+              (cd ${chart_name} && helm dependency update && helm package -d .bin . && helm push .bin/${chart_name}-${chart_version}.tgz oci://ghcr.io/dalbani/freebitnamicharts)
             fi
           done
       - name: Build chart index
