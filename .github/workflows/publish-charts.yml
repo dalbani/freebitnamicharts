@@ -50,6 +50,8 @@ jobs:
             fi
           done
           
+          echo ${GITHUB_TOKEN} | helm registry login -u ${{ github.repository_owner }} --password-stdin 
+          
           for chart_name in $(tsort dependency-graph | tac); do
             chart_version=$(yq .version ${chart_name}/Chart.yaml)
             if [[ ! -f ../../../gh-pages/${chart_name}-${chart_version}.tgz ]]; then
