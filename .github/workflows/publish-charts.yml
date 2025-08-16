@@ -40,14 +40,14 @@ jobs:
 
           for chart_name in $(tsort dependency-graph | tac); do
             chart_version=$(yq .version ${chart_version}/Chart.yaml)
-            if [ ! -f ../../../gh-pages/${chart_name}-${chart_version}.tgz ]; do
+            if [ ! -f ../../../gh-pages/${chart_name}-${chart_version}.tgz ]; then
               helm dependency update
               # cd'ing into directory for charts having a dependency like:
               #  - name: kube-prometheus-crds
               #    repository: file://./charts/kube-prometheus-crds
               #    version: 0.x.x
               (cd ${chart_name} && helm package -d ../../../../gh-pages .)
-            done
+            fi
           done
       - name: Build chart index
         run: |
