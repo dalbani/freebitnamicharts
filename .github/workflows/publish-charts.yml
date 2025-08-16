@@ -33,6 +33,8 @@ jobs:
           curl -SsLfO "https://get.helm.sh/${HELM_TARBALL}" && sudo tar xf "$HELM_TARBALL" --strip-components 1 -C /usr/local/bin
       - name: Build new/updated charts
         run: |
+          set -eu
+
           cd main/bitnami/bitnami
 
           find . -type f -exec sed -i 's#oci://registry-1.docker.io/bitnamicharts#https://dalbani.github.io/freebitnamicharts#' {} \;
@@ -47,17 +49,14 @@ jobs:
             fi
           done
           
-          cat dependency-graph
-
           for chart_name in $(tsort dependency-graph | tac); do
-            chart_version=$(yq .version ${chart_version}/Chart.yaml)
+            chart_version=$(yq .version ${chart_name}/Chart.yaml)
             if [[ ! -f ../../../gh-pages/${chart_name}-${chart_version}.tgz ]]; then
-              helm dependency update
               # cd'ing into directory for charts having a dependency like:
               #  - name: kube-prometheus-crds
               #    repository: file://./charts/kube-prometheus-crds
               #    version: 0.x.x
-              (cd ${chart_name} && helm package -d ../../../../gh-pages .)
+              (cd ${chart_name} && helm dependency update && helm package -d ../../../../gh-pages .)
             fi
           done
       - name: Build chart index
