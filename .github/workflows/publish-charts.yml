@@ -50,7 +50,7 @@ jobs:
             fi
           done
           
-          echo ${GITHUB_TOKEN} | helm registry login -u ${{ github.repository_owner }} --password-stdin ghcr.io
+          echo "${{ github.token }}" | helm registry login -u ${{ github.repository_owner }} --password-stdin ghcr.io
           
           for chart_name in $(tsort dependency-graph | tac); do
             chart_version=$(yq .version ${chart_name}/Chart.yaml)
