@@ -5,15 +5,13 @@ on: # rebuild any PRs and main branch changes
       - main
 env:
   HELM_VERSION: 3.8.1
-# Remove all permissions by default.
-permissions: {}
+permissions:
+  contents: read
+  packages: write
 jobs:
   build_charts:
     if: ${{ github.repository_owner == 'dalbani' }}
     runs-on: ubuntu-24.04
-    permissions:
-      contents: read
-      packages: write
     steps:
       - name: Check out main branch
         uses: actions/checkout@v5
