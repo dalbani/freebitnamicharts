@@ -5,13 +5,15 @@ on: # rebuild any PRs and main branch changes
       - main
 env:
   HELM_VERSION: 3.8.1
-permissions:
-  contents: read
-  packages: write
+# Remove all permissions by default.
+permissions: {}
 jobs:
   build_charts:
     if: ${{ github.repository_owner == 'dalbani' }}
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
     steps:
       - name: Check out main branch
         uses: actions/checkout@v5
@@ -35,7 +37,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ github.token }}
       - name: Build new/updated charts
         run: |
           set -eu
