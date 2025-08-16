@@ -43,7 +43,7 @@ jobs:
             fi
             chart_dependencies=($(yq '[.dependencies[].name] | join(" ")' ${chart_name}/Chart.yaml))
             if (( ${#chart_dependencies[@]} )); then
-              echo "${chart_name} ${chart_dependencies[@]}" >> dependency-graph
+              printf "${chart_name} %s\n" "${chart_dependencies[@]}" >> dependency-graph
             fi
           done
           
