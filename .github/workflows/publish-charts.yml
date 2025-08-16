@@ -35,7 +35,6 @@ jobs:
             if [ ! -d "${chart_name}" ]; then
               continue
             fi
-            echo yq "\"${chart_name} \" + .dependencies[].name" ${chart_name}/Chart.yaml >> dependency-graph
             yq "\"${chart_name} \" + .dependencies[].name" ${chart_name}/Chart.yaml >> dependency-graph
           done
           
