@@ -38,12 +38,12 @@ jobs:
           find . -type f -exec sed -i 's#oci://registry-1.docker.io/bitnamicharts#https://dalbani.github.io/freebitnamicharts#' {} \;
 
           for chart_name in *; do
-            if [ ! -d "${chart_name}" ]; then
+            if [[ ! -d "${chart_name}" ]]; then
               continue
             fi
-            chart_dependencies=$(yq '.dependencies[].name' ${chart_name}/Chart.yaml)
-            if [ -n "${chart_dependencies}" ]; then
-              echo "${chart_name} ${chart_dependencies}" >> dependency-graph
+            chart_dependencies=($(yq '[.dependencies[].name] | join(" ")' ${chart_name}/Chart.yaml))
+            if (( ${#chart_dependencies[@]} )); then
+              echo "${chart_name} ${chart_dependencies[@]}" >> dependency-graph
             fi
           done
           
@@ -51,7 +51,7 @@ jobs:
 
           for chart_name in $(tsort dependency-graph | tac); do
             chart_version=$(yq .version ${chart_version}/Chart.yaml)
-            if [ ! -f ../../../gh-pages/${chart_name}-${chart_version}.tgz ]; then
+            if [[ ! -f ../../../gh-pages/${chart_name}-${chart_version}.tgz ]]; then
               helm dependency update
               # cd'ing into directory for charts having a dependency like:
               #  - name: kube-prometheus-crds
