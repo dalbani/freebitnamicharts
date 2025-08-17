@@ -12,8 +12,7 @@ jobs:
     if: ${{ github.repository_owner == 'dalbani' }}
     runs-on: ubuntu-24.04
     permissions:
-      contents: read
-      packages: write
+      contents: write
     steps:
       - name: Check out main branch
         uses: actions/checkout@v5
@@ -32,20 +31,13 @@ jobs:
         run: |
           HELM_TARBALL="helm-v${HELM_VERSION}-linux-amd64.tar.gz"
           curl -SsLfO "https://get.helm.sh/${HELM_TARBALL}" && sudo tar xf "$HELM_TARBALL" --strip-components 1 -C /usr/local/bin
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ github.token }}
       - name: Build new/updated charts
         run: |
           set -eu
 
           cd main/bitnami/bitnami
 
-          find . -type f -exec sed -i 's#oci://registry-1.docker.io/bitnamicharts#oci://ghcr.io/dalbani/freebitnamicharts#' {} \;
-          find . -type f -name Chart.yaml -exec sed -i -E 's#https://github.com/bitnami/charts/tree/main/bitnami/.+#https://github.com/dalbani/freebitnamicharts/#' {} \;
+          find . -type f -exec sed -i 's#oci://registry-1.docker.io/bitnamicharts#https://dalbani.github.io/freebitnamicharts#' {} \;
 
           for chart_name in *; do
             if [[ ! -d "${chart_name}" ]]; then
@@ -64,7 +56,11 @@ jobs:
               #  - name: kube-prometheus-crds
               #    repository: file://./charts/kube-prometheus-crds
               #    version: 0.x.x
-              (cd ${chart_name} && helm dependency update && helm package -d .bin . && helm push .bin/${chart_name}-${chart_version}.tgz oci://ghcr.io/dalbani/freebitnamicharts)
+              (
+                cd ${chart_name} &&
+                helm dependency update &&
+                helm package --destination ../../../gh-pages .
+              )
             fi
           done
       - name: Build chart index
